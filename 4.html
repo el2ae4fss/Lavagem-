@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cadastro de Lavagens de Carros - Finais de Semana</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #2c3e50;
+    color: #ecf0f1;
+    padding: 20px;
+  }
+  h1 {
+    text-align: center;
+    color: #e67e22;
+  }
+  form {
+    background: #34495e;
+    max-width: 500px;
+    margin: 20px auto;
+    padding: 15px;
+    border-radius: 8px;
+  }
+  label {
+    display: block;
+    margin-top: 12px;
+  }
+  input[type="text"], input[type="date"], select {
+    width: 100%;
+    padding: 8px;
+    margin-top: 6px;
+    border-radius: 4px;
+    border: none;
+    font-size: 16px;
+  }
+  button {
+    margin-top: 20px;
+    width: 100%;
+    padding: 12px;
+    background-color: #e67e22;
+    border: none;
+    border-radius: 5px;
+    font-size: 18px;
+    color: white;
+    cursor: pointer;
+  }
+  button:hover {
+    background-color: #d35400;
+  }
+  .agenda {
+    max-width: 500px;
+    margin: 20px auto;
+    background: #34495e;
+    padding: 15px;
+    border-radius: 8px;
+  }
+  .agendamento {
+    border-bottom: 1px solid #7f8c8d;
+    padding: 10px 0;
+  }
+  .agendamento:last-child {
+    border: none;
+  }
+  .mensagem {
+    text-align: center;
+    margin-top: 20px;
+    color: #2ecc71;
+    font-weight: bold;
+  }
+</style>
+</head>
+<body>
+
+<h1>Cadastro de Lavagens de Carros (Finais de Semana)</h1>
+
+<form id="formLavagem">
+  <label for="data">Data da Lavagem (Sábado ou Domingo):</label>
+  <input type="date" id="data" name="data" required />
+
+  <label for="nome">Nome do Cliente:</label>
+  <input type="text" id="nome" name="nome" placeholder="Digite o nome" required />
+
+  <label for="tipo">Tipo de Lavagem:</label>
+  <select id="tipo" name="tipo" required>
+    <option value="">-- Selecione --</option>
+    <option value="Geral">Geral (R$50,00)</option>
+    <option value="Ducha">Ducha (R$30,00)</option>
+  </select>
+
+  <button type="submit">Cadastrar Lavagem</button>
+</form>
+
+<div class="mensagem" id="mensagem"></div>
+
+<div class="agenda" id="agenda">
+  <h2>Agenda de Lavagens</h2>
+  <p>Nenhum agendamento realizado ainda.</p>
+</div>
+
+<script>
+  const form = document.getElementById('formLavagem');
+  const agendaDiv = document.getElementById('agenda');
+  const mensagemDiv = document.getElementById('mensagem');
+
+  // Carrega agendamentos do localStorage, ou cria array vazio
+  let agendamentos = JSON.parse(localStorage.getItem('agendamentosLavagens')) || [];
+
+  function isWeekend(dateStr) {
+    const date = new Date(dateStr + 'T00:00:00');
+    const day = date.getDay();
+    return day === 6 || day === 0; // Sábado = 6, Domingo = 0
+  }
+
+  function salvarAgendamentos() {
+    localStorage.setItem('agendamentosLavagens', JSON.stringify(agendamentos));
+  }
+
+  function atualizarAgenda() {
+    if (agendamentos.length === 0) {
+      agendaDiv.innerHTML = '<h2>Agenda de Lavagens</h2><p>Nenhum agendamento realizado ainda.</p>';
+      return;
+    }
+
+    let html = '<h2>Agenda de Lavagens</h2>';
+    agendamentos.forEach((ag, i) => {
+      html += `
+        <div class="agendamento">
+          <strong>Data:</strong> ${ag.data} <br />
+          <strong>Cliente:</strong> ${ag.nome} <br />
+          <strong>Tipo:</strong> ${ag.tipo} (R$${ag.preco.toFixed(2)})
+        </div>
+      `;
+    });
+
+    agendaDiv.innerHTML = html;
+  }
+
+  form.addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const data = form.data.value;
+    const nome = form.nome.value.trim();
+    const tipo = form.tipo.value;
+
+    if (!isWeekend(data)) {
+      alert('Por favor, escolha uma data que seja sábado ou domingo.');
+      return;
+    }
+
+    if (!nome) {
+      alert('Por favor, digite o nome do cliente.');
+      return;
+    }
+
+    if (!tipo) {
+      alert('Por favor, selecione o tipo de lavagem.');
+      return;
+    }
+
+    const preco = tipo === 'Geral' ? 50 : 30;
+
+    const agendamento = { data, nome, tipo, preco };
+    agendamentos.push(agendamento);
+    salvarAgendamentos();
+    atualizarAgenda();
+
+    form.reset();
+    mensagemDiv.textContent = `Obrigado, ${nome}! Seu agendamento para lavagem "${tipo}" em ${data} foi registrado.`;
+  });
+
+  // Atualiza agenda ao carregar a página
+  atualizarAgenda();
+</script>
+
+</body>
+</html>
